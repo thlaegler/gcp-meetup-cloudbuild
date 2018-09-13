@@ -1,0 +1,48 @@
+options:
+  machineType: N1_HIGHCPU_32
+  diskSizeGb: 120
+
+steps:
+
+
+- id: MAVEN BUILD
+  name: gcr.io/cloud-builders/mvn
+  dir: 'example2-pipeline'
+  args: [ 'install' ]
+
+
+- id: DOCKER BUILD
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example2-pipeline'
+  args: [ 'build', '--build-arg', 'BASE_IMAGE=anapsix/alpine-java:8', '--build-arg', 'SERVICE_NAME=example2-pipeline', '-t', 'gcr.io/$PROJECT_ID/example2-pipeline', '.' ]
+
+
+- id: DOCKER PUSH
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example2-pipeline'
+  args: [ 'push', 'gcr.io/$PROJECT_ID/example2-pipeline' ]
+
+
+- id: HELM DEPLOY
+  name: gcr.io/$PROJECT_ID/helm-builder
+  dir: 'example2-pipeline'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    gcloud container clusters get-credentials gcp-meetup-cluster --zone australia-southeast1-a --project gcp-meetup-akl
+    helm install ./helm-deployment/example2-pipeline --name=example2-pipeline --namespace=gcp-meetup
+
+
+- id: CLEANUP
+  name: gcr.io/$PROJECT_ID/helm-builder
+  dir: 'example2-pipeline'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    helm delete example2-pipeline --purge
+    helm ls
+    
+images:
+- 'gcr.io/$PROJECT_ID/example2-pipeline'

@@ -1,0 +1,6 @@
+encrypt:
+  key-store:
+    location: classpath:gcp-meetup-local.jks
+logging:
+  level:
+    org.springframework.cloud: TRACE

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: example5-config-service
+spec:
+  selector:
+    app: example5-config-service
+  type: LoadBalancer
+  ports:
+  - name: api
+    port: 8080

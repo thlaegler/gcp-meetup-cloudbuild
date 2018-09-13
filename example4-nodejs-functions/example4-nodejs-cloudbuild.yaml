@@ -1,0 +1,37 @@
+steps:
+
+- id: BUILD
+  name: node
+  dir: 'example4-nodejs-functions'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    npm install --unsafe-perm
+
+
+- id: DEPLOY CLOUD FUNCTION
+  name: gcr.io/cloud-builders/gcloud
+  dir: 'example4-nodejs-functions'
+  args: [ 'gcloud', 'functions', 'deploy', 'example4-nodejs-functions', '--trigger-http', '--memory=128MB', '--entry-point=doSomething' ]
+
+
+- id: TEST CLOUD FUNCTION
+  name: gcr.io/cloud-builders/gcloud
+  args: [ 'gcloud', 'functions', 'call', 'example4-nodejs-functions', '--data', '{"example":"request"}' ]
+
+
+- id: TEST LOCAL1
+  name: node
+  dir: 'example4-nodejs-functions'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    npm run eslint
+
+
+- id: TEST LOCAL2
+  name: gcr.io/cloud-builders/npm
+  dir: 'example4-nodejs-functions'
+  args: [ 'run', 'eslint' ]

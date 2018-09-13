@@ -1,0 +1,21 @@
+encrypt:
+  key-store:
+    location: classpath:gcp-meetup.jks
+#    location: file:///etc/config/gcp-meetup.jks
+    alias: test # Will be overridden by Env Var
+    secret: test # Will be overridden by Env Var
+    password: test # Will be overridden by Env Var
+health:
+  config:
+    enabled: false
+spring:
+  application:
+    name: @project.artifactId@
+  cloud:
+    config:
+      label: master
+      server:
+        git:
+          username: test # Will be overridden by Env Var
+          password: test # Will be overridden by Env Var
+          uri: https://github.com/<change-me>/config-repository.git

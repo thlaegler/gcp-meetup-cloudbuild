@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: example6-reporting
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: example6-reporting
+    spec:
+      containers:
+      - name: example6-reporting
+        image: '{{ .Values.docker.registry }}/example6-reporting'
+        imagePullPolicy: Always

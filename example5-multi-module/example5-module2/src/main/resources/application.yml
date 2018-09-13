@@ -1,0 +1,18 @@
+server:
+  port: 8888
+logging:
+  level:
+    org.springframework.cloud: TRACE
+security:
+  basic:
+    enabled: false
+management:
+  security:
+    enabled: false
+  health:
+    defaults:
+      enabled: true
+  endpoints:
+    enabled-by-default: true
+    web:
+      expose: '*'

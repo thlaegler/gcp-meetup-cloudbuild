@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>io.meetup.akl.cloudbuild</groupId>
+	<artifactId>example5-multi-module</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>Example 5 Aggregator</name>
+
+	<modules>
+		<module>example5-config-service</module>
+		<module>example5-module1</module>
+		<module>example5-module2</module>
+	</modules>
+
+	<properties>
+		<maven.deploy.skip>true</maven.deploy.skip>
+	</properties>
+
+</project>

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: example6-reporting
+spec:
+  selector:
+    app: example6-reporting
+  type: LoadBalancer
+  ports:
+  - name: api
+    port: 8080

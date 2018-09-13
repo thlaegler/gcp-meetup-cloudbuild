@@ -1,0 +1,54 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: example3-encryption
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: example3-encryption
+    spec:
+      containers:
+      - name: example3-encryption
+        image: 'gcr.io/gcp-meetup-akl/example3-encryption'
+        imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: example3-config
+        env:
+        - name: SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: gcp-meetup-secret
+              key: gitusername
+        - name: SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gcp-meetup-secret
+              key: gitpassword
+        - name: ENCRYPT_KEY_STORE_LOCATION
+          value: '/etc/config/gcp-meetup.jks'
+        - name: ENCRYPT_KEY_STORE_ALIAS
+          valueFrom:
+            secretKeyRef:
+              name: gcp-meetup-secret
+              key: keystorealias
+        - name: ENCRYPT_KEY_STORE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: gcp-meetup-secret
+              key: keystoresecret
+        - name: ENCRYPT_KEY_STORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gcp-meetup-secret
+              key: keystorepassword
+        volumeMounts:
+          - name: gcp-meetup-secret
+            mountPath: /etc/config
+            readOnly: true
+      volumes:
+        - name: gcp-meetup-secret
+          secret:
+            secretName: gcp-meetup-secret

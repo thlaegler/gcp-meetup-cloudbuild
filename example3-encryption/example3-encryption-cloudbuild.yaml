@@ -1,0 +1,61 @@
+steps:
+
+
+- id: PREPARE CLOUDBUILD
+  name: gcr.io/cloud-builders/gsutil
+  dir: 'example3-encryption'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    gsutil -m cp gs://gcp-meetup-cloudbuild/cloudbuild.properties.enc cloudbuild.properties.enc
+
+
+- id: PREPARE KMS
+  name: gcr.io/cloud-builders/gcloud
+  dir: 'example3-encryption'
+  args:
+  - kms
+  - decrypt
+  - --ciphertext-file=cloudbuild.properties.enc
+  - --plaintext-file=cloudbuild.properties
+  - --location=global
+  - --keyring=example3-encryption-keyring
+  - --key=example3-encryption-key
+
+
+- id: TEST DECRYPTION
+  name: gcr.io/cloud-builders/gcloud
+  dir: 'example3-encryption'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    cat cloudbuild.properties
+
+
+- id: PREPARE NAMESPACE
+  name: gcr.io/cloud-builders/kubectl
+  dir: 'example3-encryption'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    cloudbuild.sh decrypt
+    cloudbuild.sh secret
+    cloudbuild.sh config-map
+
+
+- id: KUBECTL DEPLOY
+  name: gcr.io/cloud-builders/kubectl
+  dir: 'example3-encryption'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    kubectl apply -f k8s-deployment --namespace=example3-encryption
+
+
+
+images:
+- gcr.io/$PROJECT_ID/example3-encryption

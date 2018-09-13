@@ -1,0 +1,93 @@
+options:
+  machineType: N1_HIGHCPU_32
+  diskSizeGb: 120
+
+steps:
+
+
+- id: MAVEN BUILD
+  name: gcr.io/cloud-builders/mvn
+  dir: 'example5-multi-module'
+  args: [ 'install', '--fae' ]
+
+
+# Module: Config Service
+- id: DOCKER BUILD CONFIG SERVICE
+  name: 'gcr.io/cloud-builders/docker'
+  waitFor: [ 'MAVEN BUILD' ]
+  dir: 'example5-multi-module/example5-config-service'
+  args: [ 'build', '--build-arg', 'BASE_IMAGE=anapsix/alpine-java:8', '--build-arg', 'SERVICE_NAME=example5-config-service', '-t', 'gcr.io/$PROJECT_ID/example5-config-service', '.' ]
+- id: DOCKER PUSH CONFIG SERVICE
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example2-pipeline'
+  waitFor: [ 'DOCKER BUILD CONFIG SERVICE' ]
+  args: [ 'push', 'gcr.io/$PROJECT_ID/example5-config-service' ]
+- id: KUBECTL CONFIG SERVICE
+  name: gcr.io/cloud-builders/kubectl
+  dir: 'example5-multi-module/example5-config-service'
+  waitFor: [ 'DOCKER PUSH CONFIG SERVICE' ]
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=australia-southeast1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=gcp-meetup-cluster'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    gcloud container clusters get-credentials gcp-meetup-cluster --zone australia-southeast1-a --project gcp-meetup-akl
+    kubectl apply -f k8s-deployment --namespace=gcp-meetup
+
+# Module: 1
+- id: DOCKER BUILD MODULE1
+  name: 'gcr.io/cloud-builders/docker'
+  waitFor: [ 'MAVEN BUILD' ]
+  dir: 'example5-multi-module/example5-module1'
+  args: [ 'build', '--build-arg', 'BASE_IMAGE=anapsix/alpine-java:8', '--build-arg', 'SERVICE_NAME=example5-module1', '-t', 'gcr.io/$PROJECT_ID/example5-module1', '.' ]
+- id: DOCKER PUSH MODULE1
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example2-pipeline'
+  waitFor: [ 'DOCKER BUILD MODULE1' ]
+  args: [ 'push', 'gcr.io/$PROJECT_ID/example5-module1' ]
+- id: KUBECTL MODULE1
+  name: gcr.io/cloud-builders/kubectl
+  dir: 'example5-multi-module/example5-module1'
+  waitFor: [ 'DOCKER PUSH MODULE1' ]
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=australia-southeast1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=gcp-meetup-cluster'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    gcloud container clusters get-credentials gcp-meetup-cluster --zone australia-southeast1-a --project gcp-meetup-akl
+    kubectl apply -f k8s-deployment --namespace=gcp-meetup
+
+# Module: 2
+- id: DOCKER BUILD MODULE2
+  name: 'gcr.io/cloud-builders/docker'
+  waitFor: [ 'MAVEN BUILD' ]
+  dir: 'example5-multi-module/example5-module2'
+  args: [ 'build', '--build-arg', 'BASE_IMAGE=anapsix/alpine-java:8', '--build-arg', 'SERVICE_NAME=example5-module2', '-t', 'gcr.io/$PROJECT_ID/example5-module2', '.' ]
+- id: DOCKER PUSH MODULE2
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example2-pipeline'
+  waitFor: [ 'DOCKER BUILD MODULE2' ]
+  args: [ 'push', 'gcr.io/$PROJECT_ID/example5-module2' ]
+- id: KUBECTL MODULE2
+  name: gcr.io/cloud-builders/kubectl
+  dir: 'example5-multi-module/example5-module2'
+  waitFor: [ 'DOCKER PUSH MODULE2' ]
+  env:
+  - 'CLOUDSDK_COMPUTE_ZONE=australia-southeast1-a'
+  - 'CLOUDSDK_CONTAINER_CLUSTER=gcp-meetup-cluster'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    gcloud container clusters get-credentials gcp-meetup-cluster --zone australia-southeast1-a --project gcp-meetup-akl
+    kubectl apply -f k8s-deployment --namespace=gcp-meetup
+
+
+images:
+- 'gcr.io/$PROJECT_ID/example5-config-service'
+- 'gcr.io/$PROJECT_ID/example5-module1'
+- 'gcr.io/$PROJECT_ID/example5-module2'

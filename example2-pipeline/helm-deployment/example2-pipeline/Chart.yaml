@@ -1,0 +1,14 @@
+apiVersion: v1
+name: example1-basics
+version: 0.0.1
+home: https://github.com/thlaegler/gcp-meetup-cloudbuild
+source:
+- https://github.com/thlaegler/gcp-meetup-cloudbuild
+description: Example 1 Basics
+maintainers:
+- name: thlaegler
+keywords:
+- backend
+- api
+- rest
+- web

@@ -1,0 +1,48 @@
+options:
+  machineType: N1_HIGHCPU_32
+  diskSizeGb: 120
+
+steps:
+
+- id: GIT CHECKOUT SOME CODE
+  name: 'gcr.io/cloud-builders/git'
+  dir: 'example1-basics'
+  args: [ 'checkout', 'git@github.com:khoubyari/spring-boot-rest-example.git' ]
+
+
+- id: MAVEN BUILD
+  name: gcr.io/cloud-builders/mvn
+  dir: 'example1-basics'
+  args: [ 'deploy' ]
+
+
+- id: DOCKER BUILD AND PUSH
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example1-basics'
+  args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/example1-basics', '.' ]
+
+
+- id: KUBECTL DEPLOY
+  name: gcr.io/cloud-builders/kubectl
+  dir: 'example1-basics'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    kubectl apply -f k8s-deployment/example1-basics-k8s-service.yaml
+    kubectl apply -f k8s-deployment/example1-basics-k8s-deployment.yaml
+
+
+- id: HELM DEPLOY
+  name: gcr.io/$PROJECT_ID/helm-builder
+  dir: 'example1-basics'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    NAMESPACE=$(date +%s)
+    helm install ./helm-deployment/example1-basics --name=example1-basics --namespace=$NAMESPACE
+
+
+images:
+- 'gcr.io/$PROJECT_ID/example1-basics'

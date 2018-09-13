@@ -1,0 +1,2 @@
+docker:
+  registry: 'gcr.io/gcp-meetup-akl'

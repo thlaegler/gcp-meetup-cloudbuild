@@ -1,0 +1,38 @@
+steps:
+
+
+- id: NODE_INSTALL
+  name: gcr.io/cloud-builders/npm
+  dir: functions
+  args: [ 'install', '--unsafe-perm', '--prefix', 'functions' ]
+
+
+- id: TEST_LOCAL
+  waitFor: [ 'NODE_INSTALL' ]
+  name: gcr.io/cloud-builders/gcloud
+  dir: functions
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    functions deploy GithubWebhook --trigger-http --memory=128MB --entry-point=GithubWebhook
+    functions call GithubWebhook --data "{ \"ref\": \"refs/tags/test\", \"repository\": { \"name\": \"repository-name\", \"owner\": { \"name\": \"account-name\" } }, \"pusher\": { \"name\": \"pusher-name\" } }"
+    functions logs read --limit=100
+
+
+- id: DEPLOY_FUNCTION
+  waitFor: [ 'TEST_LOCAL' ]
+  name: gcr.io/cloud-builders/gcloud
+  dir: functions
+  args: [ 'beta', 'functions', 'GithubWebhook', '--trigger-http', '--memory=128MB' , 'GithubWebhook' ]
+
+
+- id: REPORT_TO_BUCKET
+  waitFor: [ 'DEPLOY_FUNCTION' ]
+  name: gcr.io/cloud-builders/gsutil
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    echo "<h1>GithubWebhook</h2>" > reports/index.html
+    gsutil -m rsync -d -r reports/ gs://gcp-meetup-cloudbuild/functions/GithubWebhook/

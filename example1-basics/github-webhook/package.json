@@ -1,0 +1,12 @@
+{
+  "name": "GithubWebhook",
+  "version": "1.0.0",
+  "description": "GithubWebhook",
+  "main": "index.js",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.87.0",
+    "googleapis": "^32.0.0",
+    "google-auth-library": "^1.6.1"
+  }
+}

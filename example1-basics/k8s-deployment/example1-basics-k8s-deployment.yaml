@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: example1-basics
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: example1-basics
+    spec:
+      containers:
+      - name: example1-basics
+        image: 'gcr.io/gcp-meetup-akl/example1-basics'
+        imagePullPolicy: Always

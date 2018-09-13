@@ -1,0 +1,60 @@
+steps:
+
+- id: MAVEN BUILD
+  name: gcr.io/cloud-builders/mvn
+  dir: 'example6-reporting'
+  args: [ 'install', '--fae' ]
+
+
+- id: DOCKER BUILD
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example6-reporting'
+  args: [ 'build', '--build-arg', 'BASE_IMAGE=anapsix/alpine-java:8', '--build-arg', 'SERVICE_NAME=example6-reporting', '-t', 'gcr.io/$PROJECT_ID/example2-pipeline', '.' ]
+
+
+- id: DOCKER PUSH
+  name: 'gcr.io/cloud-builders/docker'
+  dir: 'example6-reporting'
+  args: [ 'push', 'gcr.io/$PROJECT_ID/example2-pipeline' ]
+
+
+- id: HELM DEPLOY
+  name: gcr.io/$PROJECT_ID/helm-builder
+  dir: 'example6-reporting'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    set -e
+    gcloud container clusters get-credentials gcp-meetup-cluster --zone australia-southeast1-a --project gcp-meetup-akl
+    helm install ./helm-deployment/example6-reporting --name=example6-reporting --namespace=gcp-meetup
+    set +e
+
+  
+- id: REPORTING
+  name: gcr.io/cloud-builders/gcloud
+  dir: 'example6-reporting'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    mkdir reports
+    cp -r target/cucumber reports/
+    cp -r target/surefire-reports reports/
+    cp -r target/failsafe-reports reports/
+    cp -r target/reports reports/
+    gsutil -m rsync -d -r reports gs://gcp-meetup-cloudbuild/example6-reporting/v$_VERSION/
+    gsutil -m rsync -d -r reports gs://gcp-meetup-cloudbuild/example6-reporting/latest/
+
+
+- id: REPORT TO JIRA
+  name: byrnedo/alpine-curl
+  dir: 'example6-reporting'
+  entrypoint: /bin/bash
+  args:
+  - '-c'
+  - |
+    ./reporting.sh jira ABC-123
+    ./reporting.sh slack MyDevTeamGroup
+  
+   
